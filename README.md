@@ -2,7 +2,15 @@
 
 E. coli spiked into a human background, 10-plex TMT labeled, MS2 scans, Q Exactive
 
-## Overview
+- [Data Overview](#overview)
+- [PAW Pipeline](#pipeline)
+- [High-level Quantitities](#high-level)
+- [Human Proteins](#human)
+- [Explanation of distortion](#theory)
+- [E. coli Proteins](#E.coli)
+- [Summary](#summary)
+
+## <a name="overview"></a>Overview
 
 This is data set D3 (E. coli Spike-In TMT Data Set) from [PXD013277](http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD013277) PRIDE archive from [this publication](https://www.mcponline.org/content/19/6/1047):
 
@@ -37,7 +45,7 @@ The data was downloaded from PRIDE (about 29 GB) and converted to compressed tex
 
 ---
 
-## PAW Pipeline FDR Analysis
+## <a name="pipeline"></a>PAW Pipeline FDR Analysis
 
 ![Deltamass 2+](images/deltamass_2plus.png)
 
@@ -170,7 +178,7 @@ The RAW data files had 1,961,506 MS2 scans. At a 1% FDR, there were 303,201 scan
 
 ---
 
-## High-level Quantitative Overview
+## <a name="high-level"></a>High-level Quantitative Overview
 
 The total reporter ion intensity for each channel is a good proxy for the total amount of protein in that sample. The protein totals in the PAW pipeline exclude any shared peptides. However, homologous protein grouping greatly reduces the numbers of shared peptides in the results summaries and maximizes the number of usable reporter ion signals for quantification.
 
@@ -223,4 +231,88 @@ It has been known for several years that reporter ion accuracy in MS2-based isob
 
 ---
 
-## Individual Protein Measurements
+## <a name="human"></a>Human Protein Measurements
+
+The established way that these spike-in experiments are analyzed is to focus on the expression levels of the E. coli proteins and completely ignore the background human proteome. That is insufficient. We always have to normalize the data. We also usually do some differential expression testing. The behavior of the background of unchanging proteins is critical for both normalization and statistical testing. In this study design, the human proteome is the constant background.
+
+The notebooks I used for this data are derived from the typical notebooks I use for TMT analysis. I like using the Bioconductor package edgeR. That package has a nice normalization routine called the [trimmed mean of M-values](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25) (TMM). This routine removes some of the highest and lowest abundance data points. It computes the M values (fold changes) and trims those to remove large and small fold changes. This should define a core set of proteins that are the unchanged proteins. The algorithm calculates the single multiplicative factors that make those proteins as similar as possible.
+
+Three normalization methods were used:
+
+- TMM normalization on all 9,650 proteins
+- Manual normalization to equalize human protein total intensity
+- Filter dataset for human proteins only, then run TMM
+
+The differential expression testing used edgeR and DE candidates were proteins with a expression FDR (Benjamini-Hochberg corrected statistical model p-values) of 10% or less (FDR < 0.10). In the `TMM ALL` and the `Manual All` methods, the testing was done on all 9,650 proteins. The `TMM Human` used just the 7,559 human proteins. The E. coli proteins are only over-expressed relative to the human proteins (that is what we mean by spiked in). That is sort of a situation that the TMM algorithm was designed for. The trimming might exclude most of the E. coli proteins and then the TMM factors would be making the human background more similar.
+
+If there are too many DE proteins, the algorithm might not work well. How many E. coli proteins can we have and still have TMM work okay? The sums of all of the human protein reporter ions can be computed for each channel. Factors to match each channel to have the same total for the human proteins can be computed manually. We can do the edgeR analysis without using the TMM function (`Manual All` method).
+
+If there is the chance that the presence of the E. coli proteins could throw off the the TMM algorithm, we can filter out the E. coli proteins and just work with the human background proteome in each channel. We can then run the TMM function and expect that the human background will be normalized as well as possible.
+
+The table below shows how many DE candidates the statistical testing falsely identifies. The human background is the same 70 microgram of MCF7 cell lysate for each channel. The ground truth is that all human proteins should be at the same relative intensities after we have properly normalized the data. The last line should be 7,559 across the row. We see a large difference as a function of the amount of E. coli that was spiked in. We also have a dependence on the normalization method.  
+
+<br />  
+
+Method|TMM All|Manual All|TMM Human|TMM All|Manual All|TMM Human|TMM All|Manual All|TMM Human
+---|-------|----------|---------|-------|----------|---------|-------|----------|---------   
+Conditions|7.5 vs 15|7.5 vs 15|7.5 vs 15|15 vs 45|15 vs 45|15 vs 45|7.5 vs 45|7.5 vs 45|7.5 vs 45
+E. coli difference|1:2|1:2|1:2|1:3|1:3|1:3|1:6|1:6|1:6
+All Human Proteins|7,559|7,559|7,559|7,559|7,559|7,559|7,559|7,559|7,559
+DE Up|151|256|81|525|1,275|624|675|1,766|956
+DE Down|228|47|6|1,644|161|245|2,549|359|688
+non-DE|7,180|7,256|7,472|5,390|6,123|6,690|4,335|5,434|5,915
+
+<br />
+
+We can also look at the data from the last three rows in the table as a bar plot. Clearly, the E. coli proteins are somehow affecting both the statistical testing and the normalization. We have the lowest levels of false human DE candidates when we exclude the E. coli proteins and then run TMM. We still have an even larger effect associated with the amount of E. coli that was spiked in. I have Jupyter notebooks where all of this testing was done. They will be available soon.
+
+<br />
+
+
+![Human candidates](images/human_candidates.png)
+
+<br />
+
+This is the MA plot for just the human proteins (with TMM norm) for the comparison of the 7.5 microgram and 15 microgram spike-in channels. We mostly have non-DE candidates (as expected) for the human proteins.
+
+![Not so much E. coli](images/human_7.5_15.png)
+
+<br />
+
+Here is the MA plot for the 7.5 microgram and 45 microgram spike-in channels. Something has gone really wrong.
+
+![Lots of E. coli](images/human_7.5_45.png)
+
+---
+
+## <a name="theory"></a>What is happening?
+
+We have 1,644 DE candidates from the unchanged human background proteins! That is almost 22% of the proteins. We have done a high quality normalization. We have a test statistic using a moderated test statistic. We have done multiple testing corrections.
+
+Here is my **theory**: I think there is a low level background of previously sampled peptides that is coming off of the column. Kind of a "ghost of Christmas past" situation (the ghost of peptides past...). A precursor might have 3 to 4 very narrow isotopic peaks. The isolation quadrupole might be 2 Da on older instruments and maybe 0.7 Da on newer platforms. The isolation window is 2000 milliDa to 700 milliDa wide compared to a few peaks that may be 10 milliDa wide at the base. Low levels of background signal can be integrated over a very wide range compared to the widths of the precursor peaks.
+
+Distortions in isobaric labeling reagent tags acquired in MS2 scans has been known for years and documented in many published papers. When high resolution instruments became the norm, it was easier to look for any other co-isolated precursors based on what fraction of the isolated peaks were mapped to the precursor of interest. These precursor purity filters looked great in theory; however, they did not fix the reporter ion distortions. Along the same lines, larger-scale peptide separations should reduce the chance of co-eluting peptides compared to less separation. That also failed to improve the ratio compression problem.
+
+> Keep in mind that we have a very large separation scheme for this data. It is something like 72 fractions. The PAW pipeline does not have any way to check for precursor purity (it does not use any information from survey scans).
+
+I think the only explanation left is the non-specific background effect. I wrote a blog about how that explains ratio compression (https://pwilmart.github.io/blog/2020/01/05/TMT-ratio-distortions). This spike-in experiment actually provides an excellent test of my theory. We have a similar human background proteome for all channels. If we get some other human proteins in the non-specific noise, they will not change the expression pattern of the human protein of interest. However, any E. coli proteins that sneak through into the non-specific background do not have an expression pattern like the human background. That is the whole point, right? We have a small amount of E. coli in the first 3 channels and 6 times as much E. coli in the last three channels. Any contribution to the reporter ions from any E. coli proteins will boost the signal for the human protein in the last three channels. For the 45 microgram E. coli spike-in, the E. coli is about 61% of the total protein. We have over 2,000 E. coli proteins out of the 9,500 total proteins (about half of the proteome in both cases).
+
+It is likely we have some boost in the last three channels for many of the human proteins due to some "ghosts of E. coli peptides past". How will this manifest itself? What sneaks through in the background will probably depend on the m/z and the retention time. Not all human proteins in the 45 microgram E. coli spike-in will be boosted. Some will and some won't. Our normalization methods typically assume most proteins do not change and try to make that non-differentially expressed background more similar between samples. These proteome spike-in experiments are not very compatible with that logic because the spike-in can only go in one direction. The differences are just how much all of the spike-in proteins are over expressed.
+
+If we have some bleed through of E. coli peptides and have some human peptides get some partial reporter ion intensity boosts, then the total signal of the human proteins (our background here) for the 45 microgram E. coli spike-in will be larger than it really should have been. This will alter the single global scaling factor. The human proteins in the 45 microgram E. coli spike-in have some boosted and some not boosted. The global normalization factor will end up splitting the difference. The boosted proteins will still be larger than they should have been. The true background level would not have been estimated correctly and the non-boosted proteins will not be fully brought up to the proper background levels. Some of the non=changed human proteins in the 45 microgram E. coli spike-in will end up with lower intensities that they should have been after this split-the-difference scaling.
+
+I think that effect is pretty obvious in the MA plot above. All of the blue proteins (reduced expression) should be black and a mirror group of red proteins should also be unchanged (black). The more heavily over-expressed (red) proteins are the human proteins that had more E. coli boost.
+
+We have a **double whammy effect** going on. Individual protein expression levels can be altered by the ghost background. In most experiments, we do not have anything like we have here with the high spike-in of E. coli. The background proteins are more likely to be "flat" (not differentially expressed), and this biases expression ratios to the mean expression (larger fold-changes become smaller). The other effect is the collective distortion of the unchanged background levels of the non-differentially expressed proteins. That can mess with the normalization methods and create issues for the statistical testing. Most statistical testing assumes that data are normalized correctly such that unchanged proteins would have similar means between conditions. We can get large numbers of false positive and false negative test results when we have unintentionally poorly normalized data.
+
+---
+
+## <a name="E.coli"></a>E. coli proteins
+
+---
+
+## <a name="summary"></a>Summary
+
+---
+
+Phil Wilmarth<br />June 16, 2020
