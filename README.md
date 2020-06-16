@@ -237,11 +237,11 @@ The established way that these spike-in experiments are analyzed is to focus on 
 
 The notebooks I used for this data are derived from the typical notebooks I use for TMT analysis. I like using the Bioconductor package edgeR. That package has a nice normalization routine called the [trimmed mean of M-values](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-3-r25) (TMM). This routine removes some of the highest and lowest abundance data points. It computes the M values (fold changes) and trims those to remove large and small fold changes. This should define a core set of proteins that are the unchanged proteins. The algorithm calculates the single multiplicative factors that make those proteins as similar as possible.
 
-Three normalization methods were used:
+Three normalization methods were used in these notebooks:
 
-- TMM normalization on all 9,650 proteins
-- Manual normalization to equalize human protein total intensity
-- Filter dataset for human proteins only, then run TMM
+- [TMM normalization on all 9,650 proteins](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons.html)
+- [Manual normalization to equalize human protein total intensity](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_no-norm.html)
+- [Filter dataset for human proteins only, then run TMM](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_human.html)
 
 The differential expression testing used edgeR and DE candidates were proteins with a expression FDR (Benjamini-Hochberg corrected statistical model p-values) of 10% or less (FDR < 0.10). In the `TMM ALL` and the `Manual All` methods, the testing was done on all 9,650 proteins. The `TMM Human` used just the 7,559 human proteins. The E. coli proteins are only over-expressed relative to the human proteins (that is what we mean by spiked in). That is sort of a situation that the TMM algorithm was designed for. The trimming might exclude most of the E. coli proteins and then the TMM factors would be making the human background more similar.
 
@@ -265,6 +265,10 @@ non-DE|7,180|7,256|7,472|5,390|6,123|6,690|4,335|5,434|5,915
 <br />
 
 We can also look at the data from the last three rows in the table as a bar plot. Clearly, the E. coli proteins are somehow affecting both the statistical testing and the normalization. We have the lowest levels of false human DE candidates when we exclude the E. coli proteins and then run TMM. We still have an even larger effect associated with the amount of E. coli that was spiked in. I have Jupyter notebooks where all of this testing was done.
+
+* [All proteins with TMM](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons.html)
+* [All proteins without TMM](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_no-norm.html)
+* [Human proteins with TMM](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_human.html)
 
 > Remember that the human proteins are a constant background in all 10 channels. They should be the same and no human proteins should be differentially expressed.
 
