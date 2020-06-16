@@ -254,7 +254,7 @@ The table below shows how many DE candidates the statistical testing falsely ide
 <br />  
 
 Method|TMM All|Manual All|TMM Human|TMM All|Manual All|TMM Human|TMM All|Manual All|TMM Human
----|-------|----------|---------|-------|----------|---------|-------|----------|---------   
+------|-------|----------|---------|-------|----------|---------|-------|----------|---------   
 Conditions|7.5 vs 15|7.5 vs 15|7.5 vs 15|15 vs 45|15 vs 45|15 vs 45|7.5 vs 45|7.5 vs 45|7.5 vs 45
 E. coli difference|1:2|1:2|1:2|1:3|1:3|1:3|1:6|1:6|1:6
 All Human Proteins|7,559|7,559|7,559|7,559|7,559|7,559|7,559|7,559|7,559
@@ -299,7 +299,7 @@ I think the only explanation left is the non-specific background effect. I wrote
 
 It is likely we have some boost in the last three channels for many of the human proteins due to some "ghosts of E. coli peptides past". How will this manifest itself? What sneaks through in the background will probably depend on the m/z and the retention time. Not all human proteins in the 45 microgram E. coli spike-in will be boosted. Some will and some won't. Our normalization methods typically assume most proteins do not change and try to make that non-differentially expressed background more similar between samples. These proteome spike-in experiments are not very compatible with that logic because the spike-in can only go in one direction. The differences are just how much all of the spike-in proteins are over expressed.
 
-If we have some bleed through of E. coli peptides and have some human peptides get some partial reporter ion intensity boosts, then the total signal of the human proteins (our background here) for the 45 microgram E. coli spike-in will be larger than it really should have been. This will alter the single global scaling factor. The human proteins in the 45 microgram E. coli spike-in have some boosted and some not boosted. The global normalization factor will end up splitting the difference. The boosted proteins will still be larger than they should have been. The true background level would not have been estimated correctly and the non-boosted proteins will not be fully brought up to the proper background levels. Some of the non=changed human proteins in the 45 microgram E. coli spike-in will end up with lower intensities that they should have been after this split-the-difference scaling.
+If we have some bleed through of E. coli peptides and have some human peptides get some partial reporter ion intensity boosts, then the total signal of the human proteins (our background here) for the 45 microgram E. coli spike-in will be larger than it really should have been. This will alter the single global scaling factor. The human proteins in the 45 microgram E. coli spike-in have some boosted and some not boosted. The global normalization factor will end up splitting the difference. The boosted proteins will still be larger than they should have been. The true background level would not have been estimated correctly and the non-boosted proteins will not be fully brought up to the proper background levels. Some of the non-changed human proteins in the 45 microgram E. coli spike-in will end up with lower intensities that they should have been after this split-the-difference scaling.
 
 I think that effect is pretty obvious in the MA plot above. All of the blue proteins (reduced expression) should be black and a mirror group of red proteins should also be unchanged (black). The more heavily over-expressed (red) proteins are the human proteins that had more E. coli boost.
 
@@ -309,9 +309,27 @@ We have a **double whammy effect** going on. Individual protein expression level
 
 ## <a name="E.coli"></a>E. coli proteins
 
+Most E. coli proteins were correctly determined to be differentially expressed in the three comparisons. We did have a few in the 2-fold comparison (about 10% of the proteins) that were false negatives. We do not get the expected ratios. The individual proteins generally matched the number we had above for the ratios of the grand totals of E. coli proteins.
+
+<br />
+
+Method|TMM All|Manual All|TMM All|Manual All|TMM All|Manual All
+------|-------|----------|-------|----------|-------|----------
+Conditions|7.5 vs 15|7.5 vs 15|15 vs 45|15 vs 45|7.5 vs 45|7.5 vs 45
+E. Coli Proteins|2091|2091|2091|2091|2091|2091
+DE Up|1883|1939|2062|2075|2072|2082
+DE Down|0|0|0|0|1|0
+non-DE|208|152|29|16|18|9
+
 ---
 
 ## <a name="summary"></a>Summary
+
+It is clear that reporter ions from MS2 scans are not reliable measurements. In addition to the well established ratio compression effects that affect accuracy, we can have other data distortions that are impossible to correct. This experiment has a large number of differential proteins (all of the E. coli) in a specific expression pattern. This affects both normalization and statistical testing (partly because of its effect on normalization). Are most real experiments similar to this test mixture? Probably not. I do think that real world samples might still have potential for a lot of false positives from the unchanged background proteins. That makes for noisier DE candidate lists. That is not always a big problem if sufficient biological filtering can be done. Many time prior knowledge and biological patterns can be sued to filter out the noise.
+
+I do not like the characteristics of any of the MS2-based TMT data I have looked at. I do think that SPS MS3 data is vastly superior. There are still dynamic range issues from isotopic carryover from adjacent channels that affect what types of quantitative measurements you want to use TMT to do. I do not think it is wise to attempt corrections for reagent purities. I do not think the measured values are all that accurate. N- and C-forms of the tags greatly complicate the corrections. Measurements at the PSM level are too noisy for the linear algebra corrections. Corrections of protein level summaries might be possible, but one has to take great care to do the aggregations, corrections, and normalizations in the proper order. I do not think the corrections are worth the effort.
+
+I think TMT on platforms like the Q Exactives or the new Exploris line should not be done. I think the SPS MS3 method on Tribrids is the only viable quantitative TMT method. Honestly, I have nothing against the Exploris or Q Exactive instruments. They just are not capable of doing trustworthy TMT measurements.
 
 ---
 
