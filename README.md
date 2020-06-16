@@ -264,7 +264,9 @@ non-DE|7,180|7,256|7,472|5,390|6,123|6,690|4,335|5,434|5,915
 
 <br />
 
-We can also look at the data from the last three rows in the table as a bar plot. Clearly, the E. coli proteins are somehow affecting both the statistical testing and the normalization. We have the lowest levels of false human DE candidates when we exclude the E. coli proteins and then run TMM. We still have an even larger effect associated with the amount of E. coli that was spiked in. I have Jupyter notebooks where all of this testing was done. They will be available soon.
+We can also look at the data from the last three rows in the table as a bar plot. Clearly, the E. coli proteins are somehow affecting both the statistical testing and the normalization. We have the lowest levels of false human DE candidates when we exclude the E. coli proteins and then run TMM. We still have an even larger effect associated with the amount of E. coli that was spiked in. I have Jupyter notebooks where all of this testing was done.
+
+> Remember that the human proteins are a constant background in all 10 channels. They should be the same and no human proteins should be differentially expressed.
 
 <br />
 
@@ -273,13 +275,21 @@ We can also look at the data from the last three rows in the table as a bar plot
 
 <br />
 
-This is the MA plot for just the human proteins (with TMM norm) for the comparison of the 7.5 microgram and 15 microgram spike-in channels. We mostly have non-DE candidates (as expected) for the human proteins.
+We can see how well the TMM normalization worked for the human proteins by looking at some distribution boxplots. We have very good horizontal alignment of the medians (the notches) and the interquartile ranges (the actual boxes). This global view of the normalized data looks ideal. It looks like the human proteins are the same in all channels.
+
+![Boxplots](images/boxplots.png)
+
+We can also check the clustering of the normalized data. We see that the human proteins strongly cluster by the amount of E. coli that was spiked in. This supports the idea that the E. coli proteins themselves are altering the reporter ion intensities of the human proteins. We do not actually have the human proteome background being the same in each channel. The human expression is distorted by the E. coli proteins.
+
+![Clustering](images/MDS_plot.png)
+
+This is the MA plot for just the human proteins (with TMM norm) for the comparison of the 7.5 microgram and 15 microgram spike-in channels. We mostly have non-DE candidates (as expected) for the human proteins. We have a small number of statistically significant candidates. The number is not large, but the candidates are biased towards over-expression in the samples where more E. coli was present.
 
 ![Not so much E. coli](images/human_7.5_15.png)
 
 <br />
 
-Here is the MA plot for the 7.5 microgram and 45 microgram spike-in channels. Something has gone really wrong.
+Here is the MA plot for the 7.5 microgram and 45 microgram spike-in channels. Something has gone really wrong! The blue points all look like false positives. The red points are more complicated. Some seem to be a mirror image of the blue false positives. Others seem to be truly over-expressed. This is a real results train wreck.
 
 ![Lots of E. coli](images/human_7.5_45.png)
 
