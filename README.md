@@ -347,4 +347,12 @@ I think TMT on platforms like the Q Exactives or the new Exploris line should no
 
 ---
 
+#### Notebooks are here:
+
+* [PXD013277_comparisons_human](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_human.html) - Notebook looking at unchanged human background
+* [PXD013277_comparisons_no-norm](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons_no-norm.html) - Notebook with manually matched human protein levels between spike-in channels
+* [PXD013277_comparisons](https://pwilmart.github.io/PXD013277_E-coli_spike-ins_MS2-TMT/PXD013277_comparisons.html) - Notebook with generic edgeR workup (TMM normalization and exact testing)
+
+---
+
 Phil Wilmarth<br />June 16, 2020
